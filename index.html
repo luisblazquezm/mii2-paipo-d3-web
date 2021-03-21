@@ -14,7 +14,16 @@
   <!-- D3 visualization library -->
   <script src="https://d3js.org/d3.v4.js"></script>
   <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+  <script src="https://d3js.org/d3-scale-chromatic.v1.js"></script>
   <script src="https://d3js.org/d3-geo-projection.v2.min.js"></script>
+  <script src = "https://d3js.org/d3-array.v1.min.js"></script>
+	<script src = "https://d3js.org/d3-collection.v1.min.js"></script>
+	<script src = "https://d3js.org/d3-color.v1.min.js"></script>
+	<script src = "https://d3js.org/d3-format.v1.min.js"></script>
+	<script src = "https://d3js.org/d3-interpolate.v1.min.js"></script>
+	<script src = "https://d3js.org/d3-time.v1.min.js"></script>
+	<script src = "https://d3js.org/d3-time-format.v2.min.js"></script>
+	<script src = "https://d3js.org/d3-scale.v1.min.js"></script>
 
   <script type="text/javascript" src="assets/js/papaparse.min.js"></script>
 
@@ -32,17 +41,13 @@
 	    <!-- Control the column width, and how they should appear on different devices -->
 	    <div class="row">
 	      <!-- First chart: First row left -->
-	      <div class="col-sm-6">
-	      	<div id="chart">
-		    	<svg id="glucose-test-chart"></svg>
+	      <div class="col-sm-12">
+	      	<div class="chart">
+		      	<svg id="general-age-chart"></svg>
+		      	<div id="data">
+			    	<ul></ul>
+			    </div> 
 		    </div>
-	      	<div id="data">
-		    	<ul></ul>
-		    </div> 
-	      </div>
-	      <!-- Second chart: First row right -->
-	      <div class="col-sm-6" style="background-color:orange;">
-	      	<svg id="glucose-index-chart" width="800" height="450"></svg>
 	      </div>
 	    </div>
 
@@ -50,8 +55,11 @@
 
 	    <div class="row">
 	      <!-- Third chart: Second row entire -->
-	      <div class="col-sm-12" style="background-color:blue;">
-	      	<svg id="general-age-chart" width="800" height="450"></svg>
+	      <div class="col-sm-12">
+	      	<div class="chart">
+		    	<svg id="glucose-test-chart" width="1550" height="500"></svg>
+		    	<div id="tooltip"></div>
+		    </div>
 	      </div>	      	
 	    </div>
 

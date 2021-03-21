@@ -7,7 +7,8 @@
 		)*/
 
 const DATASET_FILE_PATH = "https://bigml.com/dashboard/dataset/60561a59927be913d500016e/download?format=csv";
-const BAR_CHART_ID = "#glucose-test-chart"
+const LINE_CHART_ID = "#glucose-test-chart"
+const BARR_CHART_ID = "#general-age-chart"
 
 /*
 // Se crea la imagen SVG
@@ -42,16 +43,25 @@ function csvToJSON(csv) {
     console.log(result);
 }
 
-function renderChart(chart, chartData, margins, chartWidth, chartHeight) {
+
+/***************************************************
+ *
+ *
+ *             GRAPH 1: BARRS (Left First Row)
+ *
+ * 
+ ***************************************************/
+
+function renderChart(chartData, chart, margins, chartHeight, chartWidth) {
   const x = d3
     .scaleBand()
     .rangeRound([margins.horizontal * 2, chartWidth])
     .padding(0.1)
-    .domain(chartData.map(d => d.diabetes));
+    .domain(chartData.map(d => d.rango));
   const y = d3
     .scaleLinear()
     .range([chartHeight, 0])
-    .domain([0, d3.max(chartData, d => d.glucosa)]);
+    .domain([0, 105]);
     
   chart.selectAll('g').remove();
   
@@ -66,13 +76,8 @@ function renderChart(chart, chartData, margins, chartWidth, chartHeight) {
     .attr('transform', `translate(${margins.horizontal}, 0)`)
     .attr('color', '#4f009e');
   
-  // chart
-  //   .selectAll('.bar')
-  //   .data(chartData, d => d.id)
-  //   .exit()
-  //   .remove();
-  
   chart.selectAll('.bar').remove();
+
   chart
     .selectAll('.bar')
     .data(chartData, d => d.id)
@@ -80,25 +85,9 @@ function renderChart(chart, chartData, margins, chartWidth, chartHeight) {
     .append('rect')
     .classed('bar', true)
     .attr('width', x.bandwidth())
-    .attr('height', d => chartHeight - y(d.diabetes))
-    .attr('x', d => x(d.diabetes))
-    .attr('y', d => y(d.glucosa))
-    /*.attr('fill', function(d){
-    	if (d.glucosa >= 70 && d.glucosa < 140) {
-    		return "#adff2f";
-    	} else if (d.glucosa >= 140 && d.glucosa < 200) {
-    		return "#ffff00";
-    	} else {
-    		return "#ff0000";
-    	}
-    })*/
-
-  
-  // chart
-  //   .selectAll('.label')
-  //   .data(chartData, d => d.id)
-  //   .exit()
-  //   .remove();
+    .attr('height', d => chartHeight - y(d.value))
+    .attr('x', d => x(d.rango))
+    .attr('y', d => y(d.value));
 
   chart.selectAll('.label').remove();
   
@@ -107,53 +96,55 @@ function renderChart(chart, chartData, margins, chartWidth, chartHeight) {
     .data(chartData, d => d.id)
     .enter()
     .append('text')
-    .text(d => d.glucosa)
-    .attr('x', d => x(d.diabetes) + x.bandwidth() / 2)
-    .attr('y', d => y(d.glucosa) - 20)
+    .text(d => d.value)
+    .attr('x', d => x(d.rango) + x.bandwidth() / 2)
+    .attr('y', d => y(d.value) - 20)
     .attr('text-anchor', 'middle')
-    .classed('label', true)
-    /*.attr('fill', function(d){
-    	if (d.glucosa >= 70 && d.glucosa < 140) {
-    		return "#adff2f";
-    	} else if (d.glucosa >= 140 && d.glucosa < 200) {
-    		return "#ffff00";
-    	} else {
-    		return "#ff0000";
-    	}
-    });*/
+    .classed('label', true);
 }
 
-function glucoseTestChart(data) {
-	// parse data from csv style to json style
-	var myData = data.map(function(el, index) {
-	  var o = {};
-	  o.id = index;
-	  return o;
-	})
+function ageTestChart(data) {
+	 const tmp = Object.values(data.map(function(obj, index) {
+	 	if (obj.edad >= 20 && obj.edad < 30)
+	    	return Object.assign({}, obj, { rango: "20-30" });
+	    else if (obj.edad >= 30 && obj.edad < 40)
+	    	return Object.assign({}, obj, { rango: "30-40" });
+	    else if (obj.edad >= 40 && obj.edad < 50)
+	    	return Object.assign({}, obj, { rango: "40-50" });
+	    else if (obj.edad >= 50 && obj.edad < 60)
+	    	return Object.assign({}, obj, { rango: "50-60" });
+	    else 
+	    	return Object.assign({}, obj, { rango: "60-70" });
+	 }), {});
 
-	var myData = Object.values(data.reduce((a, {diabetes}) => {
-		let key = `${diabetes}`;
-        ( a[key] || (a[key] = {[key]: 0}) )[key]++;
+	const myData = Object.values(tmp.filter(({diabetes}) => diabetes === 'Yes').reduce((a, {rango}, index) => {
+        let key = `${rango}`;
+        ( a[key] || (a[key] = {['rango']: `${rango}`, ['value']: 0, ['id']: index}) )['value']++;
         return a;
     }, {}));
 
-	console.log(myData)
+	myData.sort((a, b) => (a.rango > b.rango) ? 1 : -1)
 
-    // graph style
-	const margins = { horizontal: 20, vertical: 20 };
-	const chartWidth = 500 - (margins.horizontal * 2);
-	const chartHeight = 400 - (margins.vertical * 2);
+	const margins = { horizontal: 30, vertical: 20 };
+	const chartWidth = 1150 - (margins.horizontal * 2);
+	const chartHeight = 500 - (margins.vertical * 2);
 
-	// create chart container
 	const chartContainer = d3
-	    .select(BAR_CHART_ID)
+	    .select(BARR_CHART_ID)
 	    .attr('width', chartWidth + (margins.horizontal * 2))
 	    .attr('height', chartHeight + (margins.vertical * 2));
+
+
+	chartContainer.append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("x", -340)
+      .attr("y", 50)
+      .text("Number of people with diabetes");
 
 	const chart = chartContainer.append('g');
 
 	let unselectedIds = [];
-/*
+
 	const listItems = d3
 	  .select('#data')
 	  .select('ul')
@@ -162,13 +153,9 @@ function glucoseTestChart(data) {
 	  .enter()
 	  .append('li');
 
-	console.log(listItems)
-
-
 	listItems
 	  .append('span')
-	  .text(d => d.diabetes);
-
+	  .text(d => d.rango);
 
 	listItems
 	  .append('input')
@@ -183,13 +170,161 @@ function glucoseTestChart(data) {
 	  
 	    const newData = myData.filter(d => !unselectedIds.includes(d.id));
 	  
-		renderChart(chart, myData, margins, chartWidth, chartHeight);
+	    renderChart(newData, chart, margins, chartHeight, chartWidth);
 	  });
-*/
-	renderChart(chart, myData, margins, chartWidth, chartHeight);
+
+	renderChart(myData, chart, margins, chartHeight, chartWidth);
+}
+
+/***************************************************
+ *
+ *
+ *             GRAPH 3: LINES (Second Row)
+ *
+ * 
+ ***************************************************/
+
+function glucoseTestChart(data) {
+	let tmp = Object.values(data.reduce((a, {id, fecha_diagnostico, glucosa}) => {
+	  if (a[id]) {
+	    if (a[id].fecha_diagnostico < fecha_diagnostico) 
+	    	a[id] = {id, fecha_diagnostico, glucosa};
+	  } else {
+	  	a[id] = {id, fecha_diagnostico, glucosa};
+	  }
+	  return a;
+	}, {}));
+
+	const result = tmp.reduce((acc, current) => {
+	  const x = acc.find(item => item.fecha_diagnostico === current.fecha_diagnostico);
+	  if (!x) {
+	    return acc.concat([current]);
+	  } else {
+	    return acc;
+	  }
+	}, []);
+
+	var margin = { top: 10, right: 13, bottom: 20, left: 70 },
+        width = 1800 - margin.left - margin.right,
+        height = 500 - margin.top - margin.bottom;
+
+    var parseDate = d3.timeParse("%Y-%m-%d"),
+        bisectDate = d3.bisector(function(d) { return d.fecha_diagnostico; }).left,
+        dateFormatter = d3.timeParse("%b %e");
+
+    result.forEach(function(d) {
+        d.fecha_diagnostico = parseDate(d.fecha_diagnostico);
+    });
+
+    result.sort(function(a, b) {
+        return a.fecha_diagnostico - b.fecha_diagnostico;
+    });
+
+    var filtered = result.filter(function (el) {
+	  return el.fecha_diagnostico != null;
+	});
+
+	console.log(filtered)
+
+    var x = d3.scaleTime()
+            .range([50, width])
+            .domain([filtered[0].fecha_diagnostico, filtered[filtered.length - 1].fecha_diagnostico]);
+
+    var y = d3.scaleTime()
+            .range([height, 0])
+            .domain(d3.extent(filtered, function(d) { return d.glucosa; }));
+
+    var xAxis = d3.axisBottom()
+        .scale(x)
+        .tickFormat(dateFormatter);
+
+    var yAxis = d3.axisLeft()
+        .scale(y)
+        .tickFormat(d3.format("s"))
+
+    var line = d3.line()
+        .x(function(d) { return x(d.fecha_diagnostico); })
+        .y(function(d) { return y(d.glucosa); });
+
+    var svg = d3.select(LINE_CHART_ID)
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    // Y AXIS TEXT
+    svg.append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("x", -300)
+      .attr("y", 30)
+      .text("Pacient Glucose");
+
+    // TOOLTIP
+    var tooltip = d3.select("#tooltip")
+        .attr("class", "tooltip")
+        .style("display", "none");
+
+    svg.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis);
+
+    svg.append("g")
+        .attr("class", "y axis")
+        .call(yAxis)
+
+    svg.append("path")
+        .datum(filtered)
+        .attr("class", "line")
+        .attr("d", line);
+
+    var focus = svg.append("g")
+        .attr("class", "focus")
+        .style("display", "none");
+
+    focus.append("circle")
+        .attr("r", 5);
+
+    var tooltipDate = tooltip.append("div")
+        .attr("class", "tooltip-date");
+
+    var tooltipGlucose = tooltip.append("div");
+    tooltipGlucose.append("span")
+        .attr("class", "tooltip-title")
+        .text("Glucose: ");
+
+    var tooltipGlucoseValue = tooltipGlucose.append("span")
+        .attr("class", "tooltip-glucose");
+
+    svg.append("rect")
+        .attr("class", "overlay")
+        .attr("width", width)
+        .attr("height", height)
+        .on("mouseover", function() { focus.style("display", "flex"); tooltip.style("display", "flex");  })
+        .on("mouseout", function() { focus.style("display", "none"); tooltip.style("display", "none"); })
+        .on("mousemove", mousemove);
+
+    function mousemove() {
+        var x0 = x.invert(d3.mouse(this)[0]),
+            i = bisectDate(filtered, x0, 1),
+            d0 = result[i - 1],
+            d1 = result[i],
+            d = x0 - d0.fecha_diagnostico > d1.fecha_diagnostico - x0 ? d1 : d0;
+        focus.attr("transform", "translate(" + x(d.fecha_diagnostico) + "," + y(d.glucosa) + ")");
+        tooltip.attr("style", "left:" + (x(d.fecha_diagnostico) + 64) + "px;top:" + y(d.glucosa) + "px;");
+        tooltip.attr("style", "display: flex");
+        console.log(parseDate(d.fecha_diagnostico))
+        tooltip.select(".tooltip-date").text(parseDate(d.fecha_diagnostico));
+        tooltip.select(".tooltip-glucose").text(d.glucosa);
+    }
+	
 }
 
 /*
+
+d3.json(
+	  "https://raw.githubusercontent.com/FreeCodeCamp/ProjectReferenceData/master/GDP-data.json",
+	  function (e, data) {
 d3.csv(DATASET_FILE_PATH, function(d) {
     console.log(d);
     glucoseTestChart(d)
@@ -227,7 +362,7 @@ var data = [
     "diabetes": "No",
     "medicacion_previa": "prozac",
     "observaciones": "",
-    "fecha_diagnostico": "2016-01-04",
+    "fecha_diagnostico": "2016-01-05",
     "fecha_diagnostico_year": 2016,
     "fecha_diagnostico_month": 1,
     "fecha_diagnostico_day-of-month": 4,
@@ -245,7 +380,7 @@ var data = [
     "diabetes": "Yes",
     "medicacion_previa": "",
     "observaciones": "",
-    "fecha_diagnostico": "2016-01-04",
+    "fecha_diagnostico": "2016-01-06",
     "fecha_diagnostico_year": 2016,
     "fecha_diagnostico_month": 1,
     "fecha_diagnostico_day-of-month": 4,
@@ -263,7 +398,7 @@ var data = [
     "diabetes": "No",
     "medicacion_previa": "",
     "observaciones": "",
-    "fecha_diagnostico": "2016-01-05",
+    "fecha_diagnostico": "2016-01-07",
     "fecha_diagnostico_year": 2016,
     "fecha_diagnostico_month": 1,
     "fecha_diagnostico_day-of-month": 5,
@@ -281,7 +416,7 @@ var data = [
     "diabetes": "Yes",
     "medicacion_previa": "omeoprazol,simvastatina",
     "observaciones": "",
-    "fecha_diagnostico": "2016-01-05",
+    "fecha_diagnostico": "2016-01-08",
     "fecha_diagnostico_year": 2016,
     "fecha_diagnostico_month": 1,
     "fecha_diagnostico_day-of-month": 5,
@@ -299,7 +434,7 @@ var data = [
     "diabetes": "No",
     "medicacion_previa": "tranquimazin",
     "observaciones": "",
-    "fecha_diagnostico": "2016-01-05",
+    "fecha_diagnostico": "2016-01-09",
     "fecha_diagnostico_year": 2016,
     "fecha_diagnostico_month": 1,
     "fecha_diagnostico_day-of-month": 5,
@@ -317,7 +452,7 @@ var data = [
     "diabetes": "Yes",
     "medicacion_previa": "",
     "observaciones": "",
-    "fecha_diagnostico": "2016-01-05",
+    "fecha_diagnostico": "2016-01-10",
     "fecha_diagnostico_year": 2016,
     "fecha_diagnostico_month": 1,
     "fecha_diagnostico_day-of-month": 5,
@@ -335,7 +470,7 @@ var data = [
     "diabetes": "No",
     "medicacion_previa": "",
     "observaciones": "",
-    "fecha_diagnostico": "2016-01-06",
+    "fecha_diagnostico": "2016-01-11",
     "fecha_diagnostico_year": 2016,
     "fecha_diagnostico_month": 1,
     "fecha_diagnostico_day-of-month": 6,
@@ -353,7 +488,7 @@ var data = [
     "diabetes": "Yes",
     "medicacion_previa": "",
     "observaciones": "",
-    "fecha_diagnostico": "2016-01-06",
+    "fecha_diagnostico": "2016-01-12",
     "fecha_diagnostico_year": 2016,
     "fecha_diagnostico_month": 1,
     "fecha_diagnostico_day-of-month": 6,
@@ -371,7 +506,7 @@ var data = [
     "diabetes": "Yes",
     "medicacion_previa": "",
     "observaciones": "",
-    "fecha_diagnostico": "2016-01-06",
+    "fecha_diagnostico": "2016-01-13",
     "fecha_diagnostico_year": 2016,
     "fecha_diagnostico_month": 1,
     "fecha_diagnostico_day-of-month": 6,
@@ -389,7 +524,7 @@ var data = [
     "diabetes": "No",
     "medicacion_previa": "",
     "observaciones": "",
-    "fecha_diagnostico": "2016-01-06",
+    "fecha_diagnostico": "2016-01-14",
     "fecha_diagnostico_year": 2016,
     "fecha_diagnostico_month": 1,
     "fecha_diagnostico_day-of-month": 6,
@@ -407,7 +542,7 @@ var data = [
     "diabetes": "Yes",
     "medicacion_previa": "",
     "observaciones": "",
-    "fecha_diagnostico": "2016-01-07",
+    "fecha_diagnostico": "2016-01-15",
     "fecha_diagnostico_year": 2016,
     "fecha_diagnostico_month": 1,
     "fecha_diagnostico_day-of-month": 7,
@@ -425,7 +560,7 @@ var data = [
     "diabetes": "No",
     "medicacion_previa": "",
     "observaciones": "",
-    "fecha_diagnostico": "2016-01-07",
+    "fecha_diagnostico": "2016-01-16",
     "fecha_diagnostico_year": 2016,
     "fecha_diagnostico_month": 1,
     "fecha_diagnostico_day-of-month": 7,
@@ -443,7 +578,7 @@ var data = [
     "diabetes": "Yes",
     "medicacion_previa": "",
     "observaciones": "",
-    "fecha_diagnostico": "2016-01-08",
+    "fecha_diagnostico": "2016-01-17",
     "fecha_diagnostico_year": 2016,
     "fecha_diagnostico_month": 1,
     "fecha_diagnostico_day-of-month": 8,
@@ -461,7 +596,7 @@ var data = [
     "diabetes": "Yes",
     "medicacion_previa": "enalapril",
     "observaciones": "Posible cardiopatía. En proceso de diagnóstico.",
-    "fecha_diagnostico": "2016-01-08",
+    "fecha_diagnostico": "2016-01-18",
     "fecha_diagnostico_year": 2016,
     "fecha_diagnostico_month": 1,
     "fecha_diagnostico_day-of-month": 8,
@@ -479,7 +614,7 @@ var data = [
     "diabetes": "Yes",
     "medicacion_previa": "",
     "observaciones": "",
-    "fecha_diagnostico": "2016-01-08",
+    "fecha_diagnostico": "2016-01-19",
     "fecha_diagnostico_year": 2016,
     "fecha_diagnostico_month": 1,
     "fecha_diagnostico_day-of-month": 8,
@@ -497,7 +632,7 @@ var data = [
     "diabetes": "Yes",
     "medicacion_previa": "",
     "observaciones": "",
-    "fecha_diagnostico": "2016-01-11",
+    "fecha_diagnostico": "2016-01-20",
     "fecha_diagnostico_year": 2016,
     "fecha_diagnostico_month": 1,
     "fecha_diagnostico_day-of-month": 11,
@@ -14023,11 +14158,15 @@ var data = [
   }
 ]
 
-var newData = data.map(function(el, index) {
-  var o = Object.assign({}, el);
-  o.id = index;
-  return o;
-})
+function addId(arr) {
+  return arr.map(function(obj, index) {
+    return Object.assign({}, obj, { id: index });
+  });
+};
+
+var newData = addId(data);
+
+ageTestChart(newData)
 glucoseTestChart(newData)
 
 
