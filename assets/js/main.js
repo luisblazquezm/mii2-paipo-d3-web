@@ -1,24 +1,7 @@
-/*data = Object.assign(
-			d3.csvParse(
-				await FileAttachment("../../data/diabetes_csv.csv").text(), 
-				({letter, frequency}) => ({name: letter, value: +frequency})
-			).sort((a, b) => d3.descending(a.value, b.value)), 
-			{y: "↑ Numero de veces embarazada"}
-		)*/
-
 const DATASET_FILE_PATH = "https://bigml.com/dashboard/dataset/60561a59927be913d500016e/download?format=csv";
 const LINE_CHART_ID = "#glucose-test-chart"
 const BARR_CHART_ID = "#general-age-chart"
 
-/*
-// Se crea la imagen SVG
-const svg = d3.select("pregnancy-diabetes-chart"),
-	width = svg.attr("width"),
-	height = svg.attr("height"),
-	path = d3.geoPath(),
-	data = d3.map(),
-	patrimonies = "";
-*/
 function csvToJSON(csv) {
     var lines = csv.split("\n");
     var result = [];
@@ -87,7 +70,18 @@ function renderChart(chartData, chart, margins, chartHeight, chartWidth) {
     .attr('width', x.bandwidth())
     .attr('height', d => chartHeight - y(d.value))
     .attr('x', d => x(d.rango))
-    .attr('y', d => y(d.value));
+    .attr('y', d => y(d.value))
+    .attr('fill', (d) => {
+        if (d.value > 50 && d.value <= 75) {
+          return "#FFA500"; //orange
+        } else if (d.value > 25 && d.value <= 50) {
+          return "#e3da10"; //yellow
+        } else if (d.value > 0 && d.value <= 25)  {
+          return "#10e310"; //green
+        } else {
+          return "#FF0000"; //red
+        }
+    })
 
   chart.selectAll('.label').remove();
   
@@ -141,6 +135,11 @@ function ageTestChart(data) {
       .attr("y", 50)
       .text("Number of people with diabetes");
 
+    chartContainer.append("text")
+      .attr("x", 540)
+      .attr("y", 20)
+      .text("Age range");
+
 	const chart = chartContainer.append('g');
 
 	let unselectedIds = [];
@@ -179,7 +178,7 @@ function ageTestChart(data) {
 /***************************************************
  *
  *
- *             GRAPH 3: LINES (Second Row)
+ *             GRAPH 2: LINES (Second Row)
  *
  * 
  ***************************************************/
@@ -204,13 +203,14 @@ function glucoseTestChart(data) {
 	  }
 	}, []);
 
-	var margin = { top: 10, right: 13, bottom: 20, left: 70 },
+	var margin = { top: 30, right: 13, bottom: 20, left: 70 },
         width = 1800 - margin.left - margin.right,
         height = 500 - margin.top - margin.bottom;
 
-    var parseDate = d3.timeParse("%Y-%m-%d"),
-        bisectDate = d3.bisector(function(d) { return d.fecha_diagnostico; }).left,
-        dateFormatter = d3.timeParse("%b %e");
+    var parseDate = d3.timeParse("%Y-%m-%d");
+    var bisectDate = d3.bisector(function(d) { return d.fecha_diagnostico; }).left;
+    var dateFormatter = d3.timeFormat("%b-%Y");
+    var tooltipFormatter = d3.timeFormat("%Y-%m-%d");
 
     result.forEach(function(d) {
         d.fecha_diagnostico = parseDate(d.fecha_diagnostico);
@@ -224,13 +224,13 @@ function glucoseTestChart(data) {
 	  return el.fecha_diagnostico != null;
 	});
 
-	console.log(filtered)
+    console.log(filtered)
 
     var x = d3.scaleTime()
             .range([50, width])
             .domain([filtered[0].fecha_diagnostico, filtered[filtered.length - 1].fecha_diagnostico]);
 
-    var y = d3.scaleTime()
+    var y = d3.scaleLinear()
             .range([height, 0])
             .domain(d3.extent(filtered, function(d) { return d.glucosa; }));
 
@@ -240,7 +240,6 @@ function glucoseTestChart(data) {
 
     var yAxis = d3.axisLeft()
         .scale(y)
-        .tickFormat(d3.format("s"))
 
     var line = d3.line()
         .x(function(d) { return x(d.fecha_diagnostico); })
@@ -252,6 +251,12 @@ function glucoseTestChart(data) {
         .append("g")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
+    // X AXIS TEXT
+    svg.append("text")
+      .attr("x", 840)
+      .attr("y", 0)
+      .text("Date of the analysis");
+
     // Y AXIS TEXT
     svg.append("text")
       .attr("transform", "rotate(-90)")
@@ -260,10 +265,6 @@ function glucoseTestChart(data) {
       .text("Pacient Glucose");
 
     // TOOLTIP
-    var tooltip = d3.select("#tooltip")
-        .attr("class", "tooltip")
-        .style("display", "none");
-
     svg.append("g")
         .attr("class", "x axis")
         .attr("transform", "translate(0," + height + ")")
@@ -278,6 +279,7 @@ function glucoseTestChart(data) {
         .attr("class", "line")
         .attr("d", line);
 
+    // TOOLTIP BOX
     var focus = svg.append("g")
         .attr("class", "focus")
         .style("display", "none");
@@ -285,23 +287,37 @@ function glucoseTestChart(data) {
     focus.append("circle")
         .attr("r", 5);
 
-    var tooltipDate = tooltip.append("div")
-        .attr("class", "tooltip-date");
+     focus.append("rect")
+        .attr("class", "tooltip")
+        .attr("width", 100)
+        .attr("height", 50)
+        .attr("x", 10)
+        .attr("y", -22)
+        .attr("rx", 4)
+        .attr("ry", 4)
+        .attr("fill", "white");
 
-    var tooltipGlucose = tooltip.append("div");
-    tooltipGlucose.append("span")
-        .attr("class", "tooltip-title")
-        .text("Glucose: ");
+    focus.append("text")
+        .attr("class", "tooltip-date")
+        .attr("x", 18)
+        .attr("y", -2);
 
-    var tooltipGlucoseValue = tooltipGlucose.append("span")
-        .attr("class", "tooltip-glucose");
+    focus.append("text")
+        .attr("x", 18)
+        .attr("y", 18)
+        .text("Glucose:");
+
+    focus.append("text")
+        .attr("class", "tooltip-glucose")
+        .attr("x", 80)
+        .attr("y", 18);
 
     svg.append("rect")
         .attr("class", "overlay")
         .attr("width", width)
         .attr("height", height)
-        .on("mouseover", function() { focus.style("display", "flex"); tooltip.style("display", "flex");  })
-        .on("mouseout", function() { focus.style("display", "none"); tooltip.style("display", "none"); })
+        .on("mouseover", function() { focus.style("display", null); })
+        .on("mouseout", function() { focus.style("display", "none"); })
         .on("mousemove", mousemove);
 
     function mousemove() {
@@ -310,12 +326,19 @@ function glucoseTestChart(data) {
             d0 = result[i - 1],
             d1 = result[i],
             d = x0 - d0.fecha_diagnostico > d1.fecha_diagnostico - x0 ? d1 : d0;
+        
+        console.log(x0)
+        console.log(i)
+        console.log(d0)
+        console.log(d1)
+        console.log(d)
+        console.log(x(d.fecha_diagnostico))
+
         focus.attr("transform", "translate(" + x(d.fecha_diagnostico) + "," + y(d.glucosa) + ")");
-        tooltip.attr("style", "left:" + (x(d.fecha_diagnostico) + 64) + "px;top:" + y(d.glucosa) + "px;");
-        tooltip.attr("style", "display: flex");
-        console.log(parseDate(d.fecha_diagnostico))
-        tooltip.select(".tooltip-date").text(parseDate(d.fecha_diagnostico));
-        tooltip.select(".tooltip-glucose").text(d.glucosa);
+        focus.attr("style", "left:" + (x(d.fecha_diagnostico) + 64) + "px;top:" + y(d.glucosa) + "px;");
+        focus.attr("style", "display: flex");
+        focus.select(".tooltip-date").text(tooltipFormatter(x0));
+        focus.select(".tooltip-glucose").text(d.glucosa);
     }
 	
 }
@@ -14166,8 +14189,8 @@ function addId(arr) {
 
 var newData = addId(data);
 
-ageTestChart(newData)
-glucoseTestChart(newData)
+ageTestChart(newData) // First
+glucoseTestChart(newData) // Second
 
 
 

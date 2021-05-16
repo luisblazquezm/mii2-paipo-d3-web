@@ -17,13 +17,13 @@
   <script src="https://d3js.org/d3-scale-chromatic.v1.js"></script>
   <script src="https://d3js.org/d3-geo-projection.v2.min.js"></script>
   <script src = "https://d3js.org/d3-array.v1.min.js"></script>
-	<script src = "https://d3js.org/d3-collection.v1.min.js"></script>
-	<script src = "https://d3js.org/d3-color.v1.min.js"></script>
-	<script src = "https://d3js.org/d3-format.v1.min.js"></script>
-	<script src = "https://d3js.org/d3-interpolate.v1.min.js"></script>
-	<script src = "https://d3js.org/d3-time.v1.min.js"></script>
-	<script src = "https://d3js.org/d3-time-format.v2.min.js"></script>
-	<script src = "https://d3js.org/d3-scale.v1.min.js"></script>
+  <script src = "https://d3js.org/d3-collection.v1.min.js"></script>
+  <script src = "https://d3js.org/d3-color.v1.min.js"></script>
+  <script src = "https://d3js.org/d3-format.v1.min.js"></script>
+  <script src = "https://d3js.org/d3-interpolate.v1.min.js"></script>
+  <script src = "https://d3js.org/d3-time.v1.min.js"></script>
+  <script src = "https://d3js.org/d3-time-format.v2.min.js"></script>
+  <script src = "https://d3js.org/d3-scale.v1.min.js"></script>
 
   <script type="text/javascript" src="assets/js/papaparse.min.js"></script>
 
@@ -33,14 +33,13 @@
 <body>
 
 	<div class="container-fluid">
-	  <h1>Basic Grid Structure</h1>
-	  <p>Resize the browser window to see the effect.</p>
-	  <p>The first, second and third row will automatically stack on top of each other when the screen is less than 576px wide.</p>
-	  <h1 class="h2">Dashboard</h1>
+	  <h1>Diabetes Women Pregnancy Representation</h1>
+	  <p>This is a representation of the diabetes data in women during pregnancy to show the evolution of their glucose and the age of pregnancy.</p>
 	  <div class="container-fluid">
 	    <!-- Control the column width, and how they should appear on different devices -->
 	    <div class="row">
 	      <!-- First chart: First row left -->
+	      <h1 class="h2">Age Rate in pregnant women with Diabetes</h1>
 	      <div class="col-sm-12">
 	      	<div class="chart">
 		      	<svg id="general-age-chart"></svg>
@@ -54,11 +53,11 @@
 	    <br>
 
 	    <div class="row">
-	      <!-- Third chart: Second row entire -->
+	      <!-- Second chart: Second row entire -->
+	      <h1 class="h2">Diabetes Evolution Records of a pregnant woman in a Hospital</h1>
 	      <div class="col-sm-12">
 	      	<div class="chart">
 		    	<svg id="glucose-test-chart" width="1550" height="500"></svg>
-		    	<div id="tooltip"></div>
 		    </div>
 	      </div>	      	
 	    </div>
